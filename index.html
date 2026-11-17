@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>通信制LMS デモ</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2079C0;--blue-d:#175d95;--light:#EAF3FB;--ink:#1f1f24;--sub:#5b6270;--line:#d9e2ec;
+  --bg:#f5f7fa;--card:#fff;--ok:#2e8b57;--warn:#d98a00;--ng:#c8463d;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Noto Sans JP",system-ui,sans-serif;color:var(--ink);background:var(--bg);font-size:15px;line-height:1.6}
+button{font:inherit;cursor:pointer}
+.demo-bar{background:#fff7e0;border-bottom:1px solid #f0d27a;padding:8px 16px;font-size:13px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.demo-bar b{color:#8a5a00}
+.demo-bar button{margin-left:auto;border:1px solid #d9b85a;background:#fff;border-radius:6px;padding:2px 10px;font-size:12px}
+header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;display:flex;align-items:center;gap:10px}
+header h1::before{content:"";width:4px;height:22px;background:var(--blue);border-radius:2px}
+.tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 16px;color:var(--sub)}
+.tab[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:700}
+main{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+.lead{color:var(--sub);margin:0 0 16px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.kpi .n{font-size:28px;font-weight:700;color:var(--blue)}
+.kpi .l{font-size:13px;color:var(--sub)}
+h2{font-size:16px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;color:var(--sub);font-weight:500}
+.scroll{overflow-x:auto}
+.bar{height:8px;background:#e6ebf1;border-radius:4px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--blue)}
+.badge{display:inline-block;font-size:12px;padding:1px 8px;border-radius:999px;border:1px solid}
+.b-wait{color:var(--warn);border-color:var(--warn)}
+.b-ok{color:var(--ok);border-color:var(--ok)}
+.b-ng{color:var(--ng);border-color:var(--ng)}
+.b-none{color:var(--sub);border-color:var(--line)}
+.btn{background:var(--blue);color:#fff;border:0;border-radius:8px;padding:6px 14px}
+.btn:hover{background:var(--blue-d)}
+.btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+/* student phone */
+.student-wrap{display:grid;grid-template-columns:minmax(0,390px) 1fr;gap:24px;align-items:start}
+.phone{background:#111;border-radius:36px;padding:12px;max-width:390px;width:100%;margin:0 auto}
+.screen{background:var(--bg);border-radius:26px;overflow:hidden;height:720px;display:flex;flex-direction:column}
+.p-head{background:var(--blue);color:#fff;padding:18px 16px 14px}
+.p-head small{opacity:.85}
+.ring{display:flex;align-items:center;gap:14px;margin-top:8px}
+.ring svg{flex:none}
+.p-body{flex:1;overflow:auto;padding:12px}
+.p-body .card{padding:12px;margin-bottom:10px;border-radius:10px}
+.subj{display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px}
+.p-nav{display:flex;border-top:1px solid var(--line);background:#fff}
+.p-nav button{flex:1;border:0;background:none;padding:10px 0;font-size:12px;color:var(--sub)}
+.p-nav button[aria-selected=true]{color:var(--blue);font-weight:700}
+.note{font-size:13px;color:var(--sub)}
+.explain li{margin-bottom:6px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.open{display:flex}
+.modal .card{width:100%;max-width:440px}
+label{display:block;font-size:13px;color:var(--sub);margin:10px 0 4px}
+select,textarea,input[type=file]{width:100%;font:inherit;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff}
+textarea{min-height:80px}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.preview{max-width:100%;max-height:140px;margin-top:8px;border-radius:6px;display:none}
+.hbar{display:grid;grid-template-columns:110px 1fr 48px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+.hbar .bar{height:14px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f1f24;color:#fff;padding:8px 16px;border-radius:8px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+[hidden]{display:none!important}
+@media (max-width:820px){
+  .student-wrap{grid-template-columns:1fr}
+  .screen{height:640px}
+  .tabs{margin-left:0;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="demo-bar"><b>デモ</b>仕様検討用のモックです。表示される学校・生徒・数値はすべて架空です。操作内容はこのブラウザにだけ保存されます。<button id="reset">データを初期状態に戻す</button></div>
+<header>
+  <h1>通信制課程 学習状況管理（LMS）デモ</h1>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="student" aria-selected="true">生徒（スマホ）</button>
+    <button class="tab" role="tab" data-view="teacher" aria-selected="false">教員</button>
+    <button class="tab" role="tab" data-view="pref" aria-selected="false">県教育委員会</button>
+  </nav>
+</header>
+
+<main>
+  <!-- STUDENT -->
+  <section id="v-student">
+    <p class="lead">生徒はスマホからレポートを出し、返却やコメント、スクーリング日程を確認します。</p>
+    <div class="student-wrap">
+      <div class="phone"><div class="screen">
+        <div class="p-head">
+          <small>サンプル高校 通信制課程</small>
+          <div class="ring" id="s-ring"></div>
+        </div>
+        <div class="p-body" id="s-body"></div>
+        <nav class="p-nav" id="s-nav">
+          <button data-p="home" aria-selected="true">ホーム</button>
+          <button data-p="returned" aria-selected="false">返却</button>
+          <button data-p="school" aria-selected="false">スクーリング</button>
+        </nav>
+      </div></div>
+      <div class="card explain">
+        <h2>この画面で確かめたいこと（仕様の論点）</h2>
+        <ul>
+          <li><b>提出方法</b>：紙のレポートを写真で出すか、フォームに直接書くか</li>
+          <li><b>見せる進捗</b>：科目別の提出数だけか、単位修得の見込みまで出すか</li>
+          <li><b>通知</b>：返却・締切・スクーリングを、アプリの通知・メール・LINEのどれで届けるか</li>
+          <li><b>ログイン</b>：生徒ごとのID発行と、端末をなくしたときの扱い</li>
+        </ul>
+        <p class="note">左の画面で「レポートを提出する」を押すと、教員タブの受領待ちに届きます。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TEACHER -->
+  <section id="v-teacher" hidden>
+    <p class="lead">教員は届いたレポートをまとめて確認して返却し、遅れている生徒を見つけて声をかけます。</p>
+    <div class="grid kpis" id="t-kpis"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));margin-top:14px">
+      <div class="card">
+        <h2>受領待ちのレポート</h2>
+        <div class="scroll"><table id="t-queue"></table></div>
+      </div>
+      <div class="card">
+        <h2>生徒ごとの進捗 <span class="note">（目安より遅れている生徒に印）</span></h2>
+        <div class="scroll"><table id="t-students"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREFECTURE -->
+  <section id="v-pref" hidden>
+    <p class="lead">県教育委員会は、通信制課程を置く学校をまたいで状況を集計します（個人名は出さず、学校単位の数値のみ）。</p>
+    <div class="grid kpis" id="p-kpis"></div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));margin-top:14px">
+      <div class="card"><h2>学校別 レポート提出率</h2><div id="p-chart"></div></div>
+      <div class="card"><h2>学校別の状況</h2><div class="scroll"><table id="p-table"></table></div></div>
+    </div>
+  </section>
+</main>
+
+<!-- submit modal -->
+<div class="modal" id="m-submit"><div class="card">
+  <h2>レポートを提出する</h2>
+  <label for="f-subj">科目と回</label>
+  <select id="f-subj"></select>
+  <label for="f-file">レポートの写真（デモのため送信されません）</label>
+  <input type="file" id="f-file" accept="image/*">
+  <img class="preview" id="f-prev" alt="">
+  <div class="row"><button class="btn ghost" data-close>やめる</button><button class="btn" id="f-send">提出する</button></div>
+</div></div>
+
+<!-- return modal -->
+<div class="modal" id="m-return"><div class="card">
+  <h2 id="r-title">返却する</h2>
+  <label for="r-grade">評価</label>
+  <select id="r-grade"><option>A</option><option>B</option><option>C</option><option value="再提出">再提出</option></select>
+  <label for="r-com">コメント</label>
+  <textarea id="r-com" placeholder="例：資料の読み取りがよくできています。問3は教科書p.42をもう一度確認しましょう。"></textarea>
+  <div class="row"><button class="btn ghost" data-close>やめる</button><button class="btn" id="r-send">返却する</button></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+const KEY = "lmsdemo.v1";
+const SUBJECTS = [["国語",12],["数学",9],["英語",12],["日本史",6],["科学と人間生活",6],["総合的な探究",3]];
+const NAMES = ["生徒A","生徒B","生徒C","生徒D","生徒E","生徒F","生徒G","生徒H","生徒I","生徒J","生徒K","生徒L"];
+const EXPECTED = 0.55; // 11月時点の目安進捗
+
+function rng(seed){return()=>{seed=(seed*1103515245+12345)%2147483648;return seed/2147483648}}
+function fresh(){
+  const r=rng(42), reports=[];
+  NAMES.forEach((n,si)=>{
+    const pace = si===0 ? 0.5 : 0.25 + r()*0.6;
+    SUBJECTS.forEach(([s,cnt])=>{
+      for(let no=1;no<=cnt;no++){
+        const p=no/cnt; let st="未提出";
+        if(p<=pace){ st = r()<0.12 ? "提出済" : (r()<0.08?"再提出":"返却済"); }
+        reports.push({sid:si,subj:s,no,status:st,grade:st==="返却済"?["A","B","B","C"][Math.floor(r()*4)]:(st==="再提出"?"再提出":""),
+          comment:st==="返却済"||st==="再提出"?"よく取り組めています。次回も締切を意識して進めましょう。":"",at:st==="提出済"?"11/"+(10+Math.floor(r()*7)):""});
+      }
+    });
+  });
+  return {reports};
+}
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.reports)S=fresh();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){const el=$("toast");el.textContent=t;el.classList.add("show");setTimeout(()=>el.classList.remove("show"),1800)}
+const done=r=>r.status==="返却済";
+const badge=st=>`<span class="badge ${{"返却済":"b-ok","提出済":"b-wait","再提出":"b-ng","未提出":"b-none"}[st]}">${st==="提出済"?"受領待ち":st}</span>`;
+
+/* ---------- student ---------- */
+let pTab="home";
+function student(){
+  const mine=S.reports.filter(r=>r.sid===0), total=mine.length, ok=mine.filter(done).length, rate=ok/total;
+  const C=2*Math.PI*30;
+  $("s-ring").innerHTML=`<svg width="72" height="72" viewBox="0 0 72 72" role="img" aria-label="合格レポート ${ok}/${total}"><circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="8"/><circle cx="36" cy="36" r="30" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C*rate} ${C}" transform="rotate(-90 36 36)"/></svg>
+  <div><div style="font-size:13px;opacity:.85">生徒A さん</div><div style="font-size:22px;font-weight:700">${ok} / ${total}</div><div style="font-size:12px;opacity:.85">合格したレポート（残り ${total-ok}）</div></div>`;
+  let h="";
+  if(pTab==="home"){
+    const next=SUBJECTS.map(([s])=>mine.find(r=>r.subj===s&&(r.status==="未提出"||r.status==="再提出"))).filter(Boolean);
+    h+=`<button class="btn" style="width:100%;padding:12px;margin-bottom:10px" id="s-open">＋ レポートを提出する</button>`;
+    h+=`<div class="card"><b style="font-size:14px">科目ごとの進み具合</b>`;
+    SUBJECTS.forEach(([s,cnt])=>{const d=mine.filter(r=>r.subj===s&&done(r)).length;
+      h+=`<div style="margin-top:8px"><div class="subj"><span>${s}</span><span class="note">${d}/${cnt}</span></div><div class="bar"><i style="width:${d/cnt*100}%"></i></div></div>`});
+    h+=`</div><div class="card"><b style="font-size:14px">次に出すレポート</b>`;
+    next.slice(0,4).forEach(r=>h+=`<div class="subj" style="margin-top:6px"><span>${r.subj} 第${r.no}回</span>${badge(r.status)}</div>`);
+    const waiting=mine.filter(r=>r.status==="提出済");
+    if(waiting.length)h+=`<div class="note" style="margin-top:8px">受領待ち：${waiting.map(r=>r.subj+" 第"+r.no+"回").join("、")}</div>`;
+    h+=`</div><div class="card" style="background:var(--light)"><b style="font-size:14px">探究の相談</b><div class="note">テーマ別のLINEオープンチャットで、複業先生®に相談できます（3営業日以内に返信）。</div></div>`;
+  }else if(pTab==="returned"){
+    const list=mine.filter(r=>r.status==="返却済"||r.status==="再提出").slice(-8).reverse();
+    list.forEach(r=>h+=`<div class="card"><div class="subj"><b>${r.subj} 第${r.no}回</b>${badge(r.status)}</div><div style="font-size:13px">評価：${esc(r.grade)}</div><div class="note">${esc(r.comment)}</div></div>`);
+  }else{
+    [["12/6（土）","国語・英語","本校 2階 201"],["12/13（土）","数学・科学と人間生活","本校 3階 理科室"],["12/20（土）","総合的な探究（外部講師の講話）","本校 体育館＋オンライン"],["1/10（土）","日本史・英語","本校 2階 201"]]
+      .forEach(([d,s,p])=>h+=`<div class="card"><div class="subj"><b>${d}</b><span class="badge b-none">出席予定</span></div><div style="font-size:14px">${s}</div><div class="note">${p}</div></div>`);
+    h+=`<p class="note">スクーリングの出欠はここに記録され、教員と生徒の両方から見られます。</p>`;
+  }
+  $("s-body").innerHTML=h;
+  const o=$("s-open"); if(o)o.onclick=openSubmit;
+  document.querySelectorAll("#s-nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.p===pTab));
+}
+$("s-nav").onclick=e=>{const b=e.target.closest("button");if(b){pTab=b.dataset.p;student()}};
+
+function openSubmit(){
+  const mine=S.reports.filter(r=>r.sid===0&&(r.status==="未提出"||r.status==="再提出"));
+  const first={};mine.forEach(r=>{if(!first[r.subj])first[r.subj]=r});
+  $("f-subj").innerHTML=Object.values(first).map(r=>`<option value="${r.subj}|${r.no}">${r.subj} 第${r.no}回${r.status==="再提出"?"（再提出）":""}</option>`).join("");
+  $("f-file").value="";$("f-prev").style.display="none";
+  $("m-submit").classList.add("open");
+}
+$("f-file").onchange=e=>{const f=e.target.files[0];if(!f)return;const u=URL.createObjectURL(f);$("f-prev").src=u;$("f-prev").style.display="block"};
+$("f-send").onclick=()=>{
+  const v=$("f-subj").value;if(!v)return;const [s,no]=v.split("|");
+  const r=S.reports.find(x=>x.sid===0&&x.subj===s&&x.no===+no);
+  r.status="提出済";r.at="11/17";save();$("m-submit").classList.remove("open");render();toast("提出しました。教員タブの受領待ちに届いています");
+};
+
+/* ---------- teacher ---------- */
+let target=null;
+function teacher(){
+  const q=S.reports.filter(r=>r.status==="提出済");
+  const per=NAMES.map((n,i)=>{const m=S.reports.filter(r=>r.sid===i);const d=m.filter(done).length;return{n,i,d,t:m.length,rate:d/m.length,re:m.filter(r=>r.status==="再提出").length}});
+  const late=per.filter(p=>p.rate<EXPECTED*0.75);
+  $("t-kpis").innerHTML=[["受領待ち",q.length+"件"],["再提出の指示中",S.reports.filter(r=>r.status==="再提出").length+"件"],["声かけが必要な生徒",late.length+"名"],["担当生徒",NAMES.length+"名"]]
+    .map(([l,n])=>`<div class="card kpi"><div class="l">${l}</div><div class="n">${n}</div></div>`).join("");
+  $("t-queue").innerHTML=`<tr><th>提出日</th><th>生徒</th><th>科目・回</th><th></th></tr>`+
+    (q.length?q.sort((a,b)=>a.sid-b.sid).map(r=>`<tr><td>${r.at}</td><td>${NAMES[r.sid]}</td><td>${r.subj} 第${r.no}回</td><td><button class="btn" data-ret="${S.reports.indexOf(r)}">確認・返却</button></td></tr>`).join("")
+      :`<tr><td colspan="4" class="note">受領待ちはありません</td></tr>`);
+  $("t-students").innerHTML=`<tr><th>生徒</th><th>合格</th><th style="width:40%">進み具合</th><th></th></tr>`+
+    per.map(p=>`<tr><td>${p.n}</td><td>${p.d}/${p.t}</td><td><div class="bar"><i style="width:${p.rate*100}%;${p.rate<EXPECTED*0.75?"background:var(--ng)":""}"></i></div></td><td>${p.rate<EXPECTED*0.75?'<span class="badge b-ng">要声かけ</span>':""}${p.re?` <span class="note">再提出${p.re}</span>`:""}</td></tr>`).join("");
+}
+$("t-queue").onclick=e=>{const b=e.target.closest("[data-ret]");if(!b)return;target=S.reports[+b.dataset.ret];
+  $("r-title").textContent=`返却する：${NAMES[target.sid]}／${target.subj} 第${target.no}回`;$("r-com").value="";$("r-grade").value="A";$("m-return").classList.add("open")};
+$("r-send").onclick=()=>{const g=$("r-grade").value;target.grade=g;target.status=g==="再提出"?"再提出":"返却済";
+  target.comment=$("r-com").value||"確認しました。";save();$("m-return").classList.remove("open");render();
+  toast(target.sid===0?"返却しました。生徒タブの「返却」に表示されます":"返却しました")};
+
+/* ---------- prefecture ---------- */
+function pref(){
+  const mine=S.reports, ownRate=mine.filter(done).length/mine.length;
+  const schools=[["サンプル高校",NAMES.length*40,ownRate,0.71,0.42],["A高校",310,0.58,0.66,0.38],["B高校",185,0.49,0.59,0.35],["C高校",420,0.63,0.74,0.47],["D高校",96,0.41,0.52,0.30]];
+  const total=schools.reduce((a,s)=>a+s[1],0), avg=schools.reduce((a,s)=>a+s[2]*s[1],0)/total;
+  $("p-kpis").innerHTML=[["対象校",schools.length+"校"],["在籍生徒（合計）",total.toLocaleString()+"名"],["レポート提出率（加重平均）",Math.round(avg*100)+"%"],["進路決定見込み（平均）",Math.round(schools.reduce((a,s)=>a+s[4],0)/schools.length*100)+"%"]]
+    .map(([l,n])=>`<div class="card kpi"><div class="l">${l}</div><div class="n">${n}</div></div>`).join("");
+  $("p-chart").innerHTML=schools.map(s=>`<div class="hbar"><span>${s[0]}</span><div class="bar"><i style="width:${s[2]*100}%"></i></div><span>${Math.round(s[2]*100)}%</span></div>`).join("")+
+    `<p class="note">サンプル高校の値は、教員タブで返却するたびに更新されます。</p>`;
+  $("p-table").innerHTML=`<tr><th>学校</th><th>在籍</th><th>提出率</th><th>スクーリング出席率</th><th>進路決定見込み</th></tr>`+
+    schools.map(s=>`<tr><td>${s[0]}</td><td>${s[1]}</td><td>${Math.round(s[2]*100)}%</td><td>${Math.round(s[3]*100)}%</td><td>${Math.round(s[4]*100)}%</td></tr>`).join("");
+}
+
+/* ---------- shell ---------- */
+function render(){student();teacher();pref()}
+document.querySelector(".tabs").onclick=e=>{const b=e.target.closest(".tab");if(!b)return;
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t===b));
+  ["student","teacher","pref"].forEach(v=>$("v-"+v).hidden=v!==b.dataset.view)};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest(".modal").classList.remove("open"));
+$("reset").onclick=()=>{S=fresh();save();pTab="home";render();toast("初期状態に戻しました")};
+render();
+})();
+</script>
+</body>
+</html>
